@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mirror">
+<meta name="theme-color" content="#0a0a0a">
+<title>Daily Mirror</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0a0a0a;--s1:#141414;--s2:#1c1c1c;--s3:#242424;--s4:#2e2e2e;
+  --b1:#222;--b2:#333;--b3:#444;
+  --t1:#f0f0f0;--t2:#c0c0c0;--t3:#888;--t4:#555;--t5:#3a3a3a;
+  --r:16px;--rs:12px;--rx:8px;
+  --ff:'DM Sans',system-ui,sans-serif;--fm:'JetBrains Mono',monospace;
+  --sab:env(safe-area-inset-bottom,0px)
+}
+html{background:var(--bg)}
+body{
+  font-family:var(--ff);background:var(--bg);color:var(--t2);
+  font-size:15px;line-height:1.5;overscroll-behavior:none;
+  -webkit-font-smoothing:antialiased;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:calc(68px + var(--sab))
+}
+
+/* ── Header ── */
+.hdr{padding:52px 20px 14px;background:var(--bg)}
+.hdr h1{font-family:var(--fm);font-size:20px;font-weight:700;letter-spacing:4px;color:var(--t1);text-transform:uppercase}
+.hdr p{font-size:11px;color:var(--t4);letter-spacing:1.5px;margin-top:3px;font-weight:500}
+
+/* ── Nav ── */
+.nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:#0e0e0e;border-top:1px solid var(--b1);padding-bottom:var(--sab);z-index:999}
+.nav button{flex:1;padding:12px 2px 8px;background:none;border:none;font-family:var(--fm);font-size:9px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--t5);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:color .2s}
+.nav button.on{color:var(--t1)}
+.nav button .dot{width:3px;height:3px;border-radius:50%;background:transparent;transition:background .2s}
+.nav button.on .dot{background:var(--t1)}
+
+/* ── Day picker ── */
+.dpk{display:flex;gap:6px;padding:10px 20px;overflow-x:auto;scrollbar-width:none}
+.dpk::-webkit-scrollbar{display:none}
+.dpk button{flex-shrink:0;padding:10px 14px;border-radius:var(--rx);background:var(--s1);border:1px solid var(--b1);color:var(--t3);font-family:var(--ff);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
+.dpk button.now{border-color:var(--b2);color:var(--t2)}
+.dpk button.sel{background:var(--t1);color:#000;border-color:var(--t1);font-weight:700}
+
+/* ── Section ── */
+.sec{padding:16px 20px}
+.lbl{font-family:var(--fm);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--t4);margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.lbl .badge{font-family:var(--ff);font-size:11px;font-weight:600;color:var(--t3);background:var(--s2);padding:4px 12px;border-radius:20px;letter-spacing:0;text-transform:none}
+.card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:18px;margin-bottom:12px}
+.div{height:1px;background:var(--b1);margin:4px 20px}
+
+/* ── Tap buttons ── */
+.trow{display:grid;gap:8px}
+.trow.c2{grid-template-columns:1fr 1fr}
+.trow.c3{grid-template-columns:1fr 1fr 1fr}
+.trow.c4{grid-template-columns:1fr 1fr 1fr 1fr}
+.tbtn{padding:15px 6px;border-radius:var(--rs);background:var(--s2);border:2px solid var(--b1);color:var(--t3);font-family:var(--ff);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s ease;text-align:center;-webkit-user-select:none;letter-spacing:.3px}
+.tbtn.on{background:var(--t1);color:#0a0a0a;border-color:var(--t1);transform:scale(.97)}
+
+/* ── Checkbox ── */
+.chk{display:flex;align-items:center;gap:14px;padding:12px 0;cursor:pointer;-webkit-user-select:none}
+.chk .box{width:28px;height:28px;border-radius:10px;border:2px solid var(--b2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s ease;font-size:15px;font-weight:800;color:transparent}
+.chk .box.on{background:var(--t1);border-color:var(--t1);color:#0a0a0a}
+.chk span{font-size:15px;font-weight:500;color:var(--t2)}
+
+/* ── Scale ── */
+.sg{margin-bottom:14px}
+.sg .sl{font-size:12px;font-weight:600;color:var(--t3);margin-bottom:8px;letter-spacing:.5px}
+.sr{display:flex;gap:8px}
+.sbtn{width:50px;height:48px;border-radius:var(--rs);background:var(--s2);border:2px solid var(--b1);color:var(--t3);font-family:var(--fm);font-size:16px;font-weight:700;cursor:pointer;transition:all .15s ease}
+.sbtn.on{background:var(--t1);color:#0a0a0a;border-color:var(--t1);transform:scale(.96)}
+
+/* ── Inputs ── */
+.inp{width:100%;padding:13px 14px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--rx);color:var(--t1);font-family:var(--ff);font-size:14px;outline:none;transition:border .2s}
+.inp:focus{border-color:var(--b3)}
+.inp::placeholder{color:var(--t5)}
+.ninp{width:88px;padding:13px 10px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--rx);color:var(--t1);font-family:var(--fm);font-size:14px;outline:none;text-align:center}
+.dinp{padding:13px 14px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--rx);color:var(--t1);font-family:var(--ff);font-size:14px;outline:none;-webkit-appearance:none}
+
+/* ── Toggle ── */
+.tgl{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
+.tgl .tlbl{font-size:14px;font-weight:600;color:var(--t2)}
+.tgl button{width:52px;height:30px;border-radius:15px;background:var(--s3);position:relative;cursor:pointer;border:none;transition:background .2s}
+.tgl button.on{background:var(--t1)}
+.tgl button .knob{width:24px;height:24px;border-radius:12px;background:var(--t4);position:absolute;top:3px;left:3px;transition:all .2s}
+.tgl button.on .knob{left:25px;background:#000}
+
+/* ── Big button ── */
+.bbtn{width:100%;padding:16px;border-radius:var(--rs);background:var(--t1);color:#0a0a0a;border:none;font-family:var(--ff);font-size:14px;font-weight:700;letter-spacing:.5px;cursor:pointer;transition:all .15s ease}
+.bbtn:active{opacity:.7;transform:scale(.98)}
+.bbtn.sec{background:var(--s3);color:var(--t2)}
+
+/* ── Banner ── */
+.bnr{padding:14px 20px;background:var(--s1);border-bottom:1px solid var(--b2);text-align:center}
+.bnr span{font-family:var(--fm);font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--t1)}
+
+/* ── Stat ── */
+.st{padding:12px 0;border-bottom:1px solid var(--b1)}
+.st:last-child{border-bottom:none}
+.st .stl{font-size:11px;font-weight:600;color:var(--t4);letter-spacing:.5px;text-transform:uppercase}
+.st .stv{font-size:18px;font-weight:800;color:var(--t1);margin-top:2px;font-family:var(--fm)}
+.st .stv.sm{font-size:14px;font-family:var(--ff);font-weight:600}
+
+/* ── Log ── */
+.le{padding:14px 0;border-bottom:1px solid var(--b1)}
+.le .ld{font-weight:700;color:var(--t1);font-size:13px;font-family:var(--fm)}
+.le .lt{font-size:12px;color:var(--t3);line-height:1.8;margin-top:4px;word-wrap:break-word}
+.le .lm{font-size:12px;color:var(--t4);font-style:italic;margin-top:4px}
+
+/* ── AI Box ── */
+.abox{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:18px;margin-top:14px}
+.abox.revka{border-left:3px solid var(--t3)}
+.abox .al{font-family:var(--fm);font-size:10px;font-weight:700;letter-spacing:2px;color:var(--t4);text-transform:uppercase;margin-bottom:10px}
+.abox .at{font-size:14px;color:var(--t2);line-height:1.8;word-wrap:break-word}
+.abox .at p{margin-bottom:12px}
+.abox .at p:last-child{margin-bottom:0}
+
+/* ── Room ── */
+.rlog{font-size:13px;color:var(--t2);padding:6px 0;font-weight:500}
+.rlog em{color:var(--t4);font-weight:400;font-style:normal}
+
+/* ── Icon chooser ── */
+.irow{display:flex;gap:20px;justify-content:center;padding:16px 0}
+.iopt{width:76px;height:76px;border-radius:18px;border:2px solid var(--b1);cursor:pointer;transition:all .15s;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--s1)}
+.iopt.sel{border-color:var(--t1);box-shadow:0 0 0 2px var(--t1)}
+.iopt svg{width:100%;height:100%}
+
+/* ── Sleep fields ── */
+.sfields{display:flex;gap:12px;flex-wrap:wrap}
+.sfield label{display:block;font-size:10px;font-weight:600;color:var(--t4);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px}
+
+/* ── Inline row ── */
+.irow2{display:flex;gap:8px;margin-top:8px;padding-left:42px}
+.irow2 .inp{flex:1}
+
+/* ── Utilities ── */
+.mt12{margin-top:12px}.mt8{margin-top:8px}.mb8{margin-bottom:8px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.fu{animation:fadeUp .25s ease}
+</style>
+</head>
+<body>
+
+<div class="hdr"><h1>Daily Mirror</h1><p>Small improvements · honest data</p></div>
+<main id="app"></main>
+<nav class="nav" id="nav"></nav>
+
+<!-- ═══ Three icon SVGs ═══ -->
+<svg id="icon1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" style="display:none">
+  <rect width="180" height="180" rx="0" fill="#0a0a0a"/>
+  <circle cx="90" cy="90" r="54" fill="none" stroke="#f0f0f0" stroke-width="5"/>
+  <text x="90" y="97" text-anchor="middle" fill="#f0f0f0" font-family="Helvetica Neue,sans-serif" font-weight="700" font-size="40">DM</text>
+</svg>
+<svg id="icon2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" style="display:none">
+  <rect width="180" height="180" rx="0" fill="#0a0a0a"/>
+  <rect x="54" y="42" width="72" height="96" rx="6" fill="none" stroke="#f0f0f0" stroke-width="4"/>
+  <line x1="90" y1="56" x2="90" y2="124" stroke="#333" stroke-width="2"/>
+  <rect x="76" y="140" width="28" height="4" rx="2" fill="#f0f0f0"/>
+  <rect x="48" y="34" width="84" height="4" rx="2" fill="#f0f0f0"/>
+</svg>
+<svg id="icon3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" style="display:none">
+  <rect width="180" height="180" rx="0" fill="#f0f0f0"/>
+  <text x="90" y="105" text-anchor="middle" fill="#0a0a0a" font-family="Helvetica Neue,sans-serif" font-weight="900" font-size="80">M</text>
+  <rect x="48" y="120" width="84" height="5" rx="2" fill="#0a0a0a"/>
+</svg>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// DATA LAYER — LocalStorage, 6am reset, week = Mon→Sun
+// ═══════════════════════════════════════════════════════════════════════════
+const RH=6, DN=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const DK="dm_daily",WK="dm_weekly";
+
+function now(){return new Date()}
+function mirrorDate(d){d=d||now();const a=new Date(d);if(a.getHours()<RH)a.setDate(a.getDate()-1);return a.toISOString().slice(0,10)}
+function weekStart(ds){const d=new Date(ds+"T12:00:00"),w=d.getDay(),diff=w===0?6:w-1;d.setDate(d.getDate()-diff);return d.toISOString().slice(0,10)}
+function weekDates(ws){const r=[];for(let i=0;i<7;i++){const d=new Date(ws+"T12:00:00");d.setDate(d.getDate()+i);r.push(d.toISOString().slice(0,10))}return r}
+function dayName(ds){return DN[new Date(ds+"T12:00:00").getDay()]}
+function dow(ds){return new Date(ds+"T12:00:00").getDay()}
+function isWd(ds){const d=dow(ds);return d>=1&&d<=5}
+function isSun(ds){return dow(ds)===0}
+function fS(ds){return new Date(ds+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"})}
+function fL(ds){return new Date(ds+"T12:00:00").toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"})}
+
+let DD,WD;
+function loadDD(){try{DD=JSON.parse(localStorage.getItem(DK))||{}}catch{DD={}}}
+function saveDD(){localStorage.setItem(DK,JSON.stringify(DD))}
+function loadWD(){try{WD=JSON.parse(localStorage.getItem(WK))||{}}catch{WD={}}}
+function saveWD(){localStorage.setItem(WK,JSON.stringify(WD))}
+function gd(ds){return DD[ds]||{}}
+function sd(ds,k,v){if(!DD[ds])DD[ds]={};DD[ds][k]=v;saveDD()}
+function gw(ws){return WD[ws]||{}}
+function sw(ws,k,v){if(!WD[ws])WD[ws]={};WD[ws][k]=v;saveWD()}
+
+function sbStrk(ds){let s=0,d=new Date(ds+"T12:00:00");while(true){const x=d.toISOString().slice(0,10);if(DD[x]?.shadowbox){s++;d.setDate(d.getDate()-1)}else break}return s}
+function ckStrk(ds){let s=0,d=new Date(ds+"T12:00:00");while(true){const x=d.toISOString().slice(0,10),day=DD[x];if(!day||(!day.breakfast&&!day.cokeSize))break;if(day.breakfast==="home"||(day.cokeSize&&day.cokeSize!=="large")){s++;d.setDate(d.getDate()-1)}else break}return s}
+
+loadDD();loadWD();
+
+// ═══════════════════════════════════════════════════════════════════════════
+// VIEW STATE
+// ═══════════════════════════════════════════════════════════════════════════
+let view="daily",sel=mirrorDate();
+const td=mirrorDate();
+const $=id=>document.getElementById(id);
+const app=$("app");
+
+// Build nav
+const tabs=[["daily","Today"],["status","Status"],["log","Log"],["revka","Revka"],["report","Report"],["settings","⚙"]];
+const navEl=$("nav");
+tabs.forEach(([v,l])=>{
+  const b=document.createElement("button");
+  b.id="n_"+v;
+  b.innerHTML=`<span class="dot"></span>${l}`;
+  b.onclick=()=>{view=v;render()};
+  navEl.appendChild(b);
+});
+
+function render(){
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("on"));
+  const nb=$("n_"+view);if(nb)nb.classList.add("on");
+  switch(view){
+    case"daily":rDaily();break;case"status":rStatus();break;
+    case"log":rLog();break;case"revka":rRevka();break;case"report":rReport();break;case"settings":rSettings();break;
+  }
+  window.scrollTo(0,0);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+function el(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!==undefined)e.innerHTML=html;return e}
+function lbl(text,badgeText){
+  const d=el("div","lbl");d.textContent=text;
+  if(badgeText){const b=el("span","badge");b.textContent=badgeText;d.appendChild(b)}
+  return d;
+}
+function tapRow(opts,cur,cols,cb){
+  const r=el("div","trow c"+cols);
+  opts.forEach(([v,l])=>{
+    const b=el("button","tbtn"+(cur===v?" on":""));b.textContent=l;
+    b.onclick=()=>cb(v);r.appendChild(b);
+  });return r;
+}
+function chk(label,on,cb){
+  const r=el("div","chk");r.onclick=cb;
+  const bx=el("div","box"+(on?" on":""));bx.textContent=on?"✓":"";r.appendChild(bx);
+  const sp=el("span","",label);r.appendChild(sp);return r;
+}
+function scl(label,val,cb){
+  const g=el("div","sg");
+  g.appendChild(el("div","sl",label));
+  const r=el("div","sr");
+  [1,2,3,4,5].forEach(n=>{
+    const b=el("button","sbtn"+(val===n?" on":""));b.textContent=n;
+    b.onclick=()=>cb(n);r.appendChild(b);
+  });g.appendChild(r);return g;
+}
+function numField(label,val,cb,step){
+  const w=el("div","sfield");
+  const lb=el("label","",label);w.appendChild(lb);
+  const inp=el("input","ninp");inp.type="number";inp.value=val;inp.placeholder="—";
+  if(step)inp.step=step;inp.oninput=e=>cb(e.target.value);w.appendChild(inp);return w;
+}
+function textInp(ph,val,cb){
+  const inp=el("input","inp");inp.type="text";inp.placeholder=ph;inp.value=val;
+  inp.oninput=e=>cb(e.target.value);return inp;
+}
+function stat(label,value,small){
+  const r=el("div","st");
+  r.appendChild(el("div","stl",label));
+  r.appendChild(el("div","stv"+(small?" sm":""),value));return r;
+}
+function toggle(label,on,cb){
+  const sec=el("div","sec");
+  const row=el("div","tgl");
+  row.appendChild(el("span","tlbl",label));
+  const btn=el("button",on?"on":"");
+  btn.appendChild(el("div","knob"));
+  btn.onclick=cb;row.appendChild(btn);
+  sec.appendChild(row);return sec;
+}
+function divider(){return el("div","div")}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DAILY VIEW
+// ═══════════════════════════════════════════════════════════════════════════
+function rDaily(){
+  const ws=weekStart(sel),dates=weekDates(ws),day=gd(sel),week=gw(ws);
+  const showW=isWd(sel)&&!day.offDay,showC=day.breakfast==="mcmuffin"||day.breakfast==="mcgriddle";
+  const sun=isSun(sel),sbs=sbStrk(sel),cks=ckStrk(sel);
+  const rc=(week.room1Name?1:0)+(week.room2Name?1:0);
+  app.innerHTML="";
+
+  // Day picker
+  const dp=el("div","dpk");
+  dates.forEach(ds=>{
+    const b=el("button",(ds===sel?"sel":"")+(ds===td&&ds!==sel?" now":""));
+    b.textContent=dayName(ds).slice(0,3)+" "+fS(ds);
+    b.onclick=()=>{sel=ds;render()};dp.appendChild(b);
+  });app.appendChild(dp);
+
+  // Sunday banner
+  if(sun){const bn=el("div","bnr");bn.appendChild(el("span","",week.reviewed?"Week Reviewed ✓":"Review your week before it closes"));app.appendChild(bn)}
+
+  // Date header
+  const dh=el("div","sec fu");
+  dh.appendChild(el("div","",`<span style="font-size:17px;font-weight:700;color:var(--t1)">${fL(sel)}</span>`));
+  if(sel===td)dh.appendChild(el("div","",`<span style="font-size:10px;font-family:var(--fm);color:var(--t4);letter-spacing:2px;margin-top:4px;display:inline-block">TODAY</span>`));
+  app.appendChild(dh);
+
+  // Off Day
+  app.appendChild(toggle("Off Day",!!day.offDay,()=>{sd(sel,"offDay",!day.offDay);render()}));
+  app.appendChild(divider());
+
+  // Sleep
+  const ss=el("div","sec fu");ss.appendChild(lbl("Sleep — myAir"));
+  const sf=el("div","sfields");
+  sf.appendChild(numField("Score",day.sleepScore||"",v=>sd(sel,"sleepScore",v)));
+  sf.appendChild(numField("Usage hrs",day.sleepUsage||"",v=>sd(sel,"sleepUsage",v),"0.1"));
+  sf.appendChild(numField("Events/hr",day.sleepEvents||"",v=>sd(sel,"sleepEvents",v),"0.1"));
+  ss.appendChild(sf);app.appendChild(ss);app.appendChild(divider());
+
+  // Breakfast
+  const bs=el("div","sec fu");bs.appendChild(lbl("Breakfast"));
+  bs.appendChild(tapRow([["home","Home"],["mcmuffin","McMuffin"],["mcgriddle","McGriddle"],["skipped","Skipped"]],day.breakfast,4,v=>{sd(sel,"breakfast",day.breakfast===v?"":v);render()}));
+  app.appendChild(bs);
+
+  // Coke
+  if(showC){
+    app.appendChild(divider());
+    const cs=el("div","sec fu");cs.appendChild(lbl("Coke Size",cks>1?cks+" days no large":null));
+    cs.appendChild(tapRow([["large","Large"],["medium","Medium"],["small","Small"],["none","None"]],day.cokeSize,4,v=>{sd(sel,"cokeSize",day.cokeSize===v?"":v);render()}));
+    app.appendChild(cs);
+  }
+
+  app.appendChild(divider());
+
+  // Walks
+  const wks=el("div","sec fu");wks.appendChild(lbl("Walks"));
+  if(showW){
+    wks.appendChild(chk("Walk 1",!!day.walk1,()=>{sd(sel,"walk1",!day.walk1);render()}));
+    wks.appendChild(chk("Walk 2",!!day.walk2,()=>{sd(sel,"walk2",!day.walk2);render()}));
+  }
+  wks.appendChild(chk("Daughter walk",!!day.daughterWalk,()=>{sd(sel,"daughterWalk",!day.daughterWalk);render()}));
+  app.appendChild(wks);app.appendChild(divider());
+
+  // Shadowbox
+  const sbs2=el("div","sec fu");sbs2.appendChild(lbl("Shadowbox",sbs>1?sbs+" night streak":null));
+  sbs2.appendChild(chk("One song in the basement",!!day.shadowbox,()=>{sd(sel,"shadowbox",!day.shadowbox);render()}));
+  app.appendChild(sbs2);app.appendChild(divider());
+
+  // Weekly
+  const wk=el("div","sec fu");wk.appendChild(lbl("Weekly",rc+"/2 rooms"));
+
+  if(week.room1Name)wk.appendChild(el("div","rlog",`✓ ${week.room1Name} <em>— ${week.room1Level}</em>`));
+  if(week.room2Name)wk.appendChild(el("div","rlog",`✓ ${week.room2Name} <em>— ${week.room2Level}</em>`));
+  if(rc<2)wk.appendChild(roomEntry(ws,rc));
+
+  const thWrap=el("div","mt12");
+  thWrap.appendChild(chk("Therapy this week",!!week.therapy,()=>{sw(ws,"therapy",!week.therapy);render()}));
+  wk.appendChild(thWrap);
+
+  wk.appendChild(chk("Talked to a friend",!!week.friendCheck,()=>{sw(ws,"friendCheck",!week.friendCheck);render()}));
+  if(week.friendCheck){
+    const fr=el("div","irow2");
+    fr.appendChild(textInp("Who",week.friendName||"",v=>sw(ws,"friendName",v)));
+    fr.appendChild(textInp("How (call, text…)",week.friendMethod||"",v=>sw(ws,"friendMethod",v)));
+    wk.appendChild(fr);
+  }
+  app.appendChild(wk);app.appendChild(divider());
+
+  // Mood
+  const ms=el("div","sec fu");ms.appendChild(lbl("Evening Check-in"));
+  ms.appendChild(scl("Mental",day.moodMental,v=>{sd(sel,"moodMental",v);render()}));
+  ms.appendChild(scl("Body",day.moodBody,v=>{sd(sel,"moodBody",v);render()}));
+  ms.appendChild(scl("Energy",day.moodEnergy,v=>{sd(sel,"moodEnergy",v);render()}));
+  ms.appendChild(textInp("How'd today feel?",day.moodText||"",v=>sd(sel,"moodText",v)));
+  app.appendChild(ms);
+
+  // Sunday submit
+  if(sun&&!week.reviewed){
+    const sub=el("div","sec");
+    const btn=el("button","bbtn");btn.textContent="Submit Week";
+    btn.onclick=()=>{sw(ws,"reviewed",true);render()};
+    sub.appendChild(btn);app.appendChild(sub);
+  }
+}
+
+function roomEntry(ws,idx){
+  const w=el("div","mt8");let rn="",rl="";
+  const inp=textInp("Room name","",v=>{rn=v});
+  w.appendChild(inp);
+  const lr=el("div","trow c2");lr.style.marginTop="8px";
+  const pb=el("button","tbtn");pb.textContent="Pass";
+  pb.onclick=()=>{rl="pass";pb.classList.add("on");db.classList.remove("on");sb.style.display="block"};
+  const db=el("button","tbtn");db.textContent="Deep Clean";
+  db.onclick=()=>{rl="deep clean";db.classList.add("on");pb.classList.remove("on");sb.style.display="block"};
+  lr.appendChild(pb);lr.appendChild(db);w.appendChild(lr);
+  const sb=el("button","bbtn sec");sb.textContent="Log Room";sb.style.display="none";sb.style.marginTop="8px";sb.style.fontSize="13px";
+  sb.onclick=()=>{if(!rn||!rl)return;const k=idx===0?"room1":"room2";sw(ws,k+"Name",rn);sw(ws,k+"Level",rl);render()};
+  w.appendChild(sb);return w;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STATUS VIEW
+// ═══════════════════════════════════════════════════════════════════════════
+function rStatus(){
+  const ws=weekStart(td),dates=weekDates(ws),week=gw(ws);
+  const rc=(week.room1Name?1:0)+(week.room2Name?1:0);
+  let wD=0,wP=0,dW=0,sb=0,total=0;
+  dates.forEach(ds=>{const d=gd(ds);total++;if(isWd(ds)&&!d.offDay){wP+=2;if(d.walk1)wD++;if(d.walk2)wD++}if(d.daughterWalk)dW++;if(d.shadowbox)sb++});
+  app.innerHTML="";
+  const h=el("div","sec");h.appendChild(lbl("This Week"));
+  h.appendChild(el("div","",`<span style="font-size:13px;color:var(--t3)">${fS(ws)} — ${fS(dates[6])}${week.reviewed?" · ✓ Reviewed":""}</span>`));
+  app.appendChild(h);
+
+  const i=el("div","sec");i.appendChild(lbl("Weekly Intention"));
+  i.appendChild(textInp("What are you pointed at this week?",week.intention||"",v=>sw(ws,"intention",v)));
+  app.appendChild(i);
+
+  const c=el("div","sec");const cd=el("div","card");
+  cd.appendChild(stat("Personal walks",wD+" / "+wP));
+  cd.appendChild(stat("Daughter walks",dW+" / "+total));
+  cd.appendChild(stat("Shadowbox nights",sb+" / "+total));
+  cd.appendChild(stat("Rooms cleaned",rc+" / 2"));
+  cd.appendChild(stat("Therapy",week.therapy?"Yes":"—"));
+  cd.appendChild(stat("Friend contact",week.friendCheck?(week.friendName||"Yes")+" ("+(week.friendMethod||"—")+")":"—"));
+  cd.appendChild(stat("Coke streak (no large)",ckStrk(td)+" days"));
+  cd.appendChild(stat("Shadowbox streak",sbStrk(td)+" nights"));
+  c.appendChild(cd);app.appendChild(c);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LOG VIEW
+// ═══════════════════════════════════════════════════════════════════════════
+function rLog(){
+  app.innerHTML="";
+  const bs=el("div","sec");
+  const br=el("div","");br.style.display="flex";br.style.gap="8px";
+  const eb=el("button","bbtn");eb.textContent="Export CSV";eb.style.flex="1";eb.onclick=exportCSV;
+  const ib=el("button","bbtn sec");ib.textContent="Import CSV";ib.style.flex="1";
+  ib.onclick=()=>{const f=document.createElement("input");f.type="file";f.accept=".csv";f.onchange=e=>{if(e.target.files[0])importCSV(e.target.files[0])};f.click()};
+  br.appendChild(eb);br.appendChild(ib);bs.appendChild(br);app.appendChild(bs);
+
+  const allD=Object.keys(DD).sort().reverse();
+  if(!allD.length){app.appendChild(el("div","sec","<span style='color:var(--t4);text-align:center;display:block'>No data yet. Start tracking on the Today page.</span>"));return}
+
+  const ls=el("div","sec");
+  allD.forEach(ds=>{
+    const d=DD[ds],e=el("div","le");
+    const hd=el("div","");hd.style.display="flex";hd.style.justifyContent="space-between";
+    hd.appendChild(el("span","ld",dayName(ds).slice(0,3)+" "+fS(ds)));
+    if(d.offDay){const bg=el("span","badge");bg.textContent="OFF";hd.appendChild(bg)}
+    e.appendChild(hd);
+    let det=[];
+    if(d.sleepScore)det.push("Sleep "+d.sleepScore+"/"+(d.sleepUsage||"?")+"h/"+(d.sleepEvents||"?")+"e");
+    if(d.breakfast)det.push(d.breakfast);
+    if(d.cokeSize)det.push("Coke: "+d.cokeSize);
+    let wl=[];if(d.walk1)wl.push("W1");if(d.walk2)wl.push("W2");if(d.daughterWalk)wl.push("DW");
+    if(wl.length)det.push(wl.join(" "));
+    if(d.shadowbox)det.push("SB");
+    if(d.moodMental)det.push("M"+d.moodMental+" B"+(d.moodBody||"?")+" E"+(d.moodEnergy||"?"));
+    e.appendChild(el("div","lt",det.join(" · ")));
+    if(d.moodText)e.appendChild(el("div","lm","\""+d.moodText+"\""));
+    ls.appendChild(e);
+  });app.appendChild(ls);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// REVKA INSIGHT TAB
+// ═══════════════════════════════════════════════════════════════════════════
+const RIK="dm_revka_insights";
+function loadInsights(){try{return JSON.parse(localStorage.getItem(RIK))||[]}catch{return[]}}
+function saveInsights(arr){localStorage.setItem(RIK,JSON.stringify(arr))}
+let revkaInsights=loadInsights();
+let revkaLoading=false;
+let revkaQuestion="";
+
+function getDataSummary(){
+  const allD=Object.keys(DD).sort();
+  if(!allD.length)return null;
+  const last14=allD.slice(-14);
+  const last7=allD.slice(-7);
+  const n=last14.length;
+  let ssS=0,ssC=0,suS=0,suC=0,seS=0,seC=0;
+  const bf={home:0,mcmuffin:0,mcgriddle:0,skipped:0},ck={large:0,medium:0,small:0,none:0};
+  let wD=0,wP=0,dW=0,sb=0,mMS=0,mBS=0,mES=0,mC=0;
+  const moods=[];
+  last14.forEach(ds=>{const day=DD[ds]||{};
+    if(day.sleepScore){ssS+=parseFloat(day.sleepScore);ssC++}
+    if(day.sleepUsage){suS+=parseFloat(day.sleepUsage);suC++}
+    if(day.sleepEvents){seS+=parseFloat(day.sleepEvents);seC++}
+    if(day.breakfast)bf[day.breakfast]=(bf[day.breakfast]||0)+1;
+    if(day.cokeSize)ck[day.cokeSize]=(ck[day.cokeSize]||0)+1;
+    if(isWd(ds)&&!day.offDay){wP+=2;if(day.walk1)wD++;if(day.walk2)wD++}
+    if(day.daughterWalk)dW++;if(day.shadowbox)sb++;
+    if(day.moodMental){mMS+=day.moodMental;mBS+=(day.moodBody||0);mES+=(day.moodEnergy||0);mC++;
+      moods.push({d:ds,m:day.moodMental,b:day.moodBody,e:day.moodEnergy,t:day.moodText||""})
+    }
+  });
+  // Recent week vs prior week comparison
+  let recent={sb:0,dw:0,home:0},prior={sb:0,dw:0,home:0};
+  last7.forEach(ds=>{const d=DD[ds]||{};if(d.shadowbox)recent.sb++;if(d.daughterWalk)recent.dw++;if(d.breakfast==="home")recent.home++});
+  const prior7=last14.slice(0,Math.max(0,last14.length-7));
+  prior7.forEach(ds=>{const d=DD[ds]||{};if(d.shadowbox)prior.sb++;if(d.daughterWalk)prior.dw++;if(d.breakfast==="home")prior.home++});
+
+  return{n,
+    ssA:ssC?(ssS/ssC).toFixed(0):"—",suA:suC?(suS/suC).toFixed(1):"—",seA:seC?(seS/seC).toFixed(1):"—",
+    bf,ck,wR:wP?Math.round(wD/wP*100):0,dR:Math.round(dW/n*100),sR:Math.round(sb/n*100),
+    mM:mC?(mMS/mC).toFixed(1):"—",mB:mC?(mBS/mC).toFixed(1):"—",mE:mC?(mES/mC).toFixed(1):"—",
+    moods,recent,prior,sbStreak:sbStrk(td),ckStreak:ckStrk(td),
+    totalDays:allD.length,firstDay:allD[0]
+  };
+}
+
+async function askRevka(question){
+  revkaLoading=true;render();
+  const ds=getDataSummary();
+  const dataBlock=ds?`Last ${ds.n} days of tracking data:
+SLEEP: Avg myAir score ${ds.ssA}, avg CPAP usage ${ds.suA}hrs, avg events/hr ${ds.seA}
+BREAKFAST: Home ${ds.bf.home}, McMuffin ${ds.bf.mcmuffin}, McGriddle ${ds.bf.mcgriddle}, Skipped ${ds.bf.skipped}
+COKE (only on McDonalds days): Large ${ds.ck.large}, Medium ${ds.ck.medium}, Small ${ds.ck.small}, None ${ds.ck.none}
+WALKS: ${ds.wR}% weekday walk completion, ${ds.dR}% daughter walks
+SHADOWBOX: ${ds.sR}% completion, current streak: ${ds.sbStreak} nights
+MOOD AVERAGES (1-5): Mental ${ds.mM}, Body ${ds.mB}, Energy ${ds.mE}
+CURRENT STREAKS: Shadowbox ${ds.sbStreak} nights, No-large-Coke ${ds.ckStreak} days
+TREND: This week shadowbox ${ds.recent.sb}/7, daughter walks ${ds.recent.dw}/7, home breakfast ${ds.recent.home}/7
+PRIOR WEEK: shadowbox ${ds.prior.sb}, daughter walks ${ds.prior.dw}, home breakfast ${ds.prior.home}
+${ds.moods.length?"RECENT MOOD NOTES: "+ds.moods.slice(-5).map(m=>fS(m.d)+": M"+m.m+" B"+m.b+" E"+m.e+(m.t?" \""+m.t+"\"":"")).join(" | "):""}
+Total days tracked: ${ds.totalDays} since ${fS(ds.firstDay)}`:"No tracking data yet.";
+
+  const sysPrompt=`You are Revka, a direct and warm wellness advisor. You work with this person between their therapy sessions. They are a 35-year-old dad working two jobs on very little sleep, dealing with a difficult marriage, low energy, poor body image, and using fast food and soda for quick dopamine hits. They are NOT trying to overhaul their life — they are making small improvements. Their tracker monitors: sleep (CPAP), breakfast choices (home vs McDonald's), Coke size when at McD's, daily walks, a nightly shadowboxing routine, cleaning rooms, therapy attendance, friend contact, and mood (mental/body/energy 1-5).
+
+Your voice: Direct. Warm. Honest. You notice small wins. You don't lecture. You don't sugarcoat. You talk like someone who has seen their data and cares about them. Keep responses to 2-3 short paragraphs. No bullet points. No headers.`;
+
+  const userMsg=question?`${dataBlock}\n\nThe person asks: ${question}`:`${dataBlock}\n\nGive me a current check-in. What patterns do you see right now? What's working, what's drifting, and what's the one thing I should pay attention to this week?`;
+
+  try{
+    const resp=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:800,system:sysPrompt,messages:[{role:"user",content:userMsg}]})
+    });
+    const data=await resp.json();
+    const text=data.content?.map(b=>b.text||"").join("")||"Couldn't connect.";
+    const insight={date:new Date().toISOString(),question:question||"Check-in",response:text};
+    revkaInsights.unshift(insight);
+    if(revkaInsights.length>20)revkaInsights=revkaInsights.slice(0,20);
+    saveInsights(revkaInsights);
+  }catch(err){
+    revkaInsights.unshift({date:new Date().toISOString(),question:question||"Check-in",response:"Couldn't reach Revka right now. Try again in a minute."});
+    saveInsights(revkaInsights);
+  }
+  revkaLoading=false;revkaQuestion="";render();
+}
+
+function rRevka(){
+  app.innerHTML="";
+  const ds=getDataSummary();
+
+  // Header
+  const hdr=el("div","sec");
+  hdr.appendChild(lbl("Revka"));
+  hdr.appendChild(el("div","","<span style='font-size:14px;color:var(--t3);line-height:1.6;display:block'>Your wellness advisor. Reads your data, tells you what she sees. No sugarcoating.</span>"));
+  app.appendChild(hdr);
+
+  // Quick check-in button
+  const qs=el("div","sec");
+  if(!ds||!ds.totalDays){
+    qs.appendChild(el("div","","<span style='font-size:14px;color:var(--t4);display:block'>Start tracking on the Today tab first. Revka needs data to work with.</span>"));
+    app.appendChild(qs);return;
+  }
+  const qb=el("button","bbtn");qb.textContent="How am I doing, Revka?";
+  qb.onclick=()=>askRevka("");
+  if(!revkaLoading)qs.appendChild(qb);
+  app.appendChild(qs);
+
+  // Ask a specific question
+  const askSec=el("div","sec");
+  const askInp=el("input","inp");askInp.type="text";askInp.placeholder="Ask Revka something specific…";askInp.value=revkaQuestion;
+  askInp.oninput=e=>{revkaQuestion=e.target.value};
+  askInp.onkeydown=e=>{if(e.key==="Enter"&&revkaQuestion.trim()){askRevka(revkaQuestion.trim())}};
+  askSec.appendChild(askInp);
+  const askBtn=el("button","bbtn sec");askBtn.textContent="Ask";askBtn.style.marginTop="8px";
+  askBtn.onclick=()=>{if(revkaQuestion.trim())askRevka(revkaQuestion.trim())};
+  if(!revkaLoading)askSec.appendChild(askBtn);
+  app.appendChild(askSec);
+
+  // Loading
+  if(revkaLoading){
+    const lb=el("div","sec");
+    const box=el("div","abox revka");
+    box.appendChild(el("div","al","Revka is reading your data…"));
+    box.appendChild(el("div","at","<span style='color:var(--t4);font-style:italic'>Looking at patterns, checking streaks, reviewing your mood notes…</span>"));
+    lb.appendChild(box);app.appendChild(lb);
+  }
+
+  app.appendChild(divider());
+
+  // Past insights
+  if(revkaInsights.length){
+    const ps=el("div","sec");ps.appendChild(lbl("Past Insights"));
+    revkaInsights.forEach((ins,idx)=>{
+      const box=el("div","abox revka");
+      const dt=new Date(ins.date);
+      const dateStr=dt.toLocaleDateString("en-US",{month:"short",day:"numeric"})+" at "+dt.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
+      box.appendChild(el("div","al",(ins.question==="Check-in"?"Check-in":"Q: "+ins.question)+" — "+dateStr));
+      const tx=el("div","at");tx.innerHTML=ins.response.replace(/\n\n/g,"</p><p>").replace(/\n/g,"<br>");
+      box.appendChild(tx);
+      // Delete button
+      const del=el("button","");del.textContent="Remove";
+      del.style.cssText="background:none;border:none;color:var(--t5);font-size:11px;font-family:var(--fm);cursor:pointer;margin-top:10px;letter-spacing:1px";
+      del.onclick=()=>{revkaInsights.splice(idx,1);saveInsights(revkaInsights);render()};
+      box.appendChild(del);
+      ps.appendChild(box);
+    });
+    app.appendChild(ps);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// REPORT VIEW
+// ═══════════════════════════════════════════════════════════════════════════
+let rS=(()=>{const d=new Date(td+"T12:00:00");d.setDate(d.getDate()-28);return d.toISOString().slice(0,10)})();
+let rE=td,rD=null,aiTxt="",aiL=false;
+
+function rReport(){
+  app.innerHTML="";
+  const s=el("div","sec");s.appendChild(lbl("Provider Report"));
+  s.appendChild(el("div","mb8","<span style='font-size:13px;color:var(--t4)'>For your therapist or doctor</span>"));
+  const dr=el("div","");dr.style.display="flex";dr.style.gap="8px";dr.style.alignItems="center";dr.style.flexWrap="wrap";dr.style.marginBottom="12px";
+  const d1=el("input","dinp");d1.type="date";d1.value=rS;d1.oninput=e=>{rS=e.target.value};
+  const ar=el("span","","→");ar.style.color="var(--t4)";
+  const d2=el("input","dinp");d2.type="date";d2.value=rE;d2.oninput=e=>{rE=e.target.value};
+  dr.appendChild(d1);dr.appendChild(ar);dr.appendChild(d2);s.appendChild(dr);
+  const gb=el("button","bbtn");gb.textContent="Generate Report";gb.onclick=()=>{rD=genRep(rS,rE);aiTxt="";render()};
+  s.appendChild(gb);app.appendChild(s);
+
+  if(!rD)return;const r=rD;
+
+  // AI Insight
+  const ai=el("div","sec");
+  if(!aiTxt&&!aiL){
+    const ab=el("button","bbtn sec");ab.textContent="Generate AI Insight";ab.onclick=()=>runAI(r);ai.appendChild(ab);
+  }
+  if(aiL)ai.appendChild(makeAIBox("Analyzing…","<span style='color:var(--t4);font-style:italic'>Reading your data and looking for patterns…</span>"));
+  if(aiTxt){
+    // Split into personal and provider sections
+    ai.appendChild(makeAIBox("Revka — Personal Insight",aiTxt.personal||"",true));
+    ai.appendChild(makeAIBox("Provider Summary — Shareable",aiTxt.provider||"",false));
+  }
+  app.appendChild(ai);
+
+  // Copy
+  const cp=el("div","sec");
+  const cb=el("button","bbtn sec");cb.textContent="Copy Report to Clipboard";cb.style.marginBottom="12px";cb.onclick=()=>copyRep(r);
+  cp.appendChild(cb);app.appendChild(cp);
+
+  // Stats cards
+  addReportCard("Sleep — CPAP",[["Avg Score",r.ssA],["Avg Usage",r.suA+" hrs"],["Avg Events/hr",r.seA]]);
+  addReportCard("Nutrition",[["Home",r.bf.home+" days"],["McMuffin",r.bf.mcmuffin+" days"],["McGriddle",r.bf.mcgriddle+" days"],["Skipped",r.bf.skipped+" days"],["Coke","L:"+r.ck.large+" M:"+r.ck.medium+" S:"+r.ck.small+" None:"+r.ck.none]]);
+  addReportCard("Movement",[["Weekday walks",r.wR+"%"],["Daughter walk",r.dR+"%"],["Shadowbox",r.sR+"%"]]);
+  addReportCard("Weekly",[["Rooms/week",r.rpw],["Therapy",r.tR+"%"],["Friend contact",r.fR+"%"]]);
+  addReportCard("Mood (1–5 scale)",[["Mental",r.mM],["Body",r.mB],["Energy",r.mE]]);
+
+  if(r.int.length){
+    const ic=el("div","sec");ic.appendChild(lbl("Weekly Intentions"));
+    const cd=el("div","card");
+    r.int.forEach(i=>cd.appendChild(stat(fS(i.w),'"'+i.t+'"',true)));
+    ic.appendChild(cd);app.appendChild(ic);
+  }
+}
+
+function makeAIBox(title,content,isRevka){
+  const bx=el("div","abox"+(isRevka?" revka":""));
+  bx.appendChild(el("div","al",title));
+  const tx=el("div","at");tx.innerHTML=content.replace(/\n\n/g,"</p><p>").replace(/\n/g,"<br>");
+  bx.appendChild(tx);return bx;
+}
+
+function addReportCard(title,stats){
+  const s=el("div","sec");s.appendChild(lbl(title));
+  const c=el("div","card");stats.forEach(([l,v])=>c.appendChild(stat(l,String(v))));
+  s.appendChild(c);app.appendChild(s);
+}
+
+function genRep(start,end){
+  const days=[];let d=new Date(start+"T12:00:00");const e=new Date(end+"T12:00:00");
+  while(d<=e){days.push(d.toISOString().slice(0,10));d.setDate(d.getDate()+1)}
+  const n=days.length;if(!n)return null;
+  let ssS=0,ssC=0,suS=0,suC=0,seS=0,seC=0;
+  const bf={home:0,mcmuffin:0,mcgriddle:0,skipped:0},ck={large:0,medium:0,small:0,none:0};
+  let wD=0,wP=0,dW=0,sb=0,mMS=0,mBS=0,mES=0,mC=0;
+  days.forEach(ds=>{const day=DD[ds]||{};
+    if(day.sleepScore){ssS+=parseFloat(day.sleepScore);ssC++}
+    if(day.sleepUsage){suS+=parseFloat(day.sleepUsage);suC++}
+    if(day.sleepEvents){seS+=parseFloat(day.sleepEvents);seC++}
+    if(day.breakfast)bf[day.breakfast]=(bf[day.breakfast]||0)+1;
+    if(day.cokeSize)ck[day.cokeSize]=(ck[day.cokeSize]||0)+1;
+    if(isWd(ds)&&!day.offDay){wP+=2;if(day.walk1)wD++;if(day.walk2)wD++}
+    if(day.daughterWalk)dW++;if(day.shadowbox)sb++;
+    if(day.moodMental){mMS+=day.moodMental;mBS+=(day.moodBody||0);mES+=(day.moodEnergy||0);mC++}
+  });
+  const wks=new Set(days.map(weekStart));let tW=0,fW=0,tw=wks.size,rT=0;const int=[];
+  wks.forEach(ws=>{const w=WD[ws]||{};if(w.therapy)tW++;if(w.friendCheck)fW++;let rc=0;if(w.room1Name)rc++;if(w.room2Name)rc++;rT+=rc;if(w.intention)int.push({w:ws,t:w.intention})});
+  return{start,end,n,tw,ssA:ssC?(ssS/ssC).toFixed(0):"—",suA:suC?(suS/suC).toFixed(1):"—",seA:seC?(seS/seC).toFixed(1):"—",
+    bf,ck,wR:wP?Math.round(wD/wP*100):0,dR:Math.round(dW/n*100),sR:Math.round(sb/n*100),
+    tR:tw?Math.round(tW/tw*100):0,fR:tw?Math.round(fW/tw*100):0,rpw:tw?(rT/tw).toFixed(1):"—",
+    mM:mC?(mMS/mC).toFixed(1):"—",mB:mC?(mBS/mC).toFixed(1):"—",mE:mC?(mES/mC).toFixed(1):"—",int};
+}
+
+async function runAI(r){
+  aiL=true;render();
+  const dataBlock=`Data for ${r.n} days (${fS(r.start)} to ${fS(r.end)}):
+SLEEP: Avg score ${r.ssA}, avg usage ${r.suA}hrs, avg events/hr ${r.seA}
+BREAKFAST: Home ${r.bf.home}, McMuffin ${r.bf.mcmuffin}, McGriddle ${r.bf.mcgriddle}, Skipped ${r.bf.skipped}
+COKE: Large ${r.ck.large}, Medium ${r.ck.medium}, Small ${r.ck.small}, None ${r.ck.none}
+WALKS: ${r.wR}% weekday completion, ${r.dR}% daughter walks, ${r.sR}% shadowbox
+WEEKLY: ${r.rpw} rooms/wk, ${r.tR}% therapy attendance, ${r.fR}% friend contact
+MOOD (1-5): Mental ${r.mM}, Body ${r.mB}, Energy ${r.mE}
+${r.int.length?"INTENTIONS: "+r.int.map(i=>i.t).join("; "):""}`;
+
+  const prompt=`You are two voices responding to a person's wellness tracking data. This person is working on small improvements — less fast food, more movement, better sleep, connecting with people. They struggle with energy, body image, and feeling stuck. They see a therapist regularly.
+
+${dataBlock}
+
+Respond in two clearly labeled sections:
+
+SECTION 1: "PERSONAL" — Write as Revka, their wellness advisor. Be direct, warm, and honest. Talk about what patterns you see, what's working, what's slipping, and why it might be slipping. Don't sugarcoat but don't lecture. Notice the small wins. Give one concrete suggestion. 3-4 paragraphs.
+
+SECTION 2: "PROVIDER" — Write a clean, clinical summary suitable to share with a therapist or doctor. Just the data patterns and notable trends. No advice. 2-3 short paragraphs. Professional tone.
+
+Separate the two sections with the exact line: ---SPLIT---`;
+
+  try{
+    const resp=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1500,messages:[{role:"user",content:prompt}]})
+    });
+    const data=await resp.json();
+    const full=data.content?.map(b=>b.text||"").join("")||"";
+    const parts=full.split("---SPLIT---");
+    aiTxt={personal:(parts[0]||"").replace(/^SECTION 1:?\s*"?PERSONAL"?\s*/i,"").trim(),
+           provider:(parts[1]||parts[0]||"").replace(/^SECTION 2:?\s*"?PROVIDER"?\s*/i,"").trim()};
+  }catch(err){
+    aiTxt={personal:"Could not connect to AI. Your report data is still available above.",provider:""};
+  }
+  aiL=false;render();
+}
+
+function copyRep(r){
+  let txt=`DAILY MIRROR — PROVIDER REPORT\n${fL(r.start)} — ${fL(r.end)}\n${r.n} days / ${r.tw} weeks\n\nSLEEP (CPAP)\n  Avg Score: ${r.ssA}\n  Avg Usage: ${r.suA} hrs\n  Avg Events/hr: ${r.seA}\n\nNUTRITION\n  Home: ${r.bf.home} | McMuffin: ${r.bf.mcmuffin} | McGriddle: ${r.bf.mcgriddle} | Skipped: ${r.bf.skipped}\n  Coke — L:${r.ck.large} M:${r.ck.medium} S:${r.ck.small} None:${r.ck.none}\n\nMOVEMENT\n  Weekday walks: ${r.wR}%\n  Daughter walk: ${r.dR}%\n  Shadowbox: ${r.sR}%\n\nWEEKLY\n  Rooms/week: ${r.rpw}\n  Therapy: ${r.tR}%\n  Friend contact: ${r.fR}%\n\nMOOD (1-5)\n  Mental: ${r.mM} | Body: ${r.mB} | Energy: ${r.mE}`;
+  if(r.int.length)txt+="\n\n"+r.int.map(i=>"INTENTION ("+fS(i.w)+"): "+i.t).join("\n");
+  if(aiTxt?.provider)txt+="\n\nPROVIDER SUMMARY:\n"+aiTxt.provider;
+  navigator.clipboard?.writeText(txt).then(()=>alert("Copied!"));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SETTINGS VIEW
+// ═══════════════════════════════════════════════════════════════════════════
+let selIcon=localStorage.getItem("dm_icon")||"1";
+
+function rSettings(){
+  app.innerHTML="";
+
+  // Icon
+  const is=el("div","sec");is.appendChild(lbl("App Icon"));
+  is.appendChild(el("div","mb8","<span style='font-size:13px;color:var(--t4)'>Choose an icon. In Safari: Share → Add to Home Screen.</span>"));
+  const ir=el("div","irow");
+  ["1","2","3"].forEach(n=>{
+    const opt=el("div","iopt"+(selIcon===n?" sel":""));
+    const svg=$("icon"+n);if(svg)opt.innerHTML=svg.outerHTML.replace('style="display:none"',"");
+    opt.onclick=()=>{selIcon=n;localStorage.setItem("dm_icon",n);setIcon();render()};
+    ir.appendChild(opt);
+  });is.appendChild(ir);app.appendChild(is);app.appendChild(divider());
+
+  // Data
+  const ds=el("div","sec");ds.appendChild(lbl("Data"));
+  const br=el("div","");br.style.display="flex";br.style.gap="8px";
+  const eb=el("button","bbtn");eb.textContent="Export CSV";eb.style.flex="1";eb.onclick=exportCSV;
+  const ib=el("button","bbtn sec");ib.textContent="Import CSV";ib.style.flex="1";
+  ib.onclick=()=>{const f=document.createElement("input");f.type="file";f.accept=".csv";f.onchange=e=>{if(e.target.files[0])importCSV(e.target.files[0])};f.click()};
+  br.appendChild(eb);br.appendChild(ib);ds.appendChild(br);
+  const rb=el("button","bbtn sec");rb.textContent="Reset All Data";rb.style.marginTop="10px";
+  rb.onclick=()=>{if(confirm("Delete ALL data? This cannot be undone.")){DD={};WD={};saveDD();saveWD();render()}};
+  ds.appendChild(rb);app.appendChild(ds);app.appendChild(divider());
+
+  // About
+  const ab=el("div","sec");ab.appendChild(lbl("About"));
+  ab.appendChild(el("div","","<span style='font-size:13px;color:var(--t3);line-height:1.7;display:block'>Daily Mirror — personal wellness tracker. All data stays on your device in localStorage. Export CSV regularly as a backup. Import to restore. Day resets at 6:00 AM. Week resets Monday 6:00 AM.</span>"));
+  app.appendChild(ab);
+}
+
+function setIcon(){
+  const svg=$("icon"+selIcon);
+  if(!svg)return;
+  const svgData=new XMLSerializer().serializeToString(svg);
+  const canvas=document.createElement("canvas");canvas.width=180;canvas.height=180;
+  const ctx=canvas.getContext("2d");
+  const img=new Image();
+  img.onload=()=>{ctx.drawImage(img,0,0);
+    let link=document.querySelector('link[rel="apple-touch-icon"]');
+    if(!link){link=document.createElement("link");link.rel="apple-touch-icon";document.head.appendChild(link)}
+    link.href=canvas.toDataURL("image/png");
+  };
+  img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svgData);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CSV EXPORT / IMPORT
+// ═══════════════════════════════════════════════════════════════════════════
+function exportCSV(){
+  const hdr=["date","day","offDay","sleepScore","sleepUsage","sleepEvents","breakfast","cokeSize","walk1","walk2","daughterWalk","shadowbox","moodMental","moodBody","moodEnergy","moodText","weekStart","room1Name","room1Level","room2Name","room2Level","therapy","friendCheck","friendName","friendMethod","weekIntention","weekReviewed"];
+  const rows=[hdr.join(",")];
+  Object.keys(DD).sort().forEach(ds=>{
+    const d=DD[ds],ws=weekStart(ds),w=WD[ws]||{};
+    rows.push([ds,dayName(ds),d.offDay||"",d.sleepScore||"",d.sleepUsage||"",d.sleepEvents||"",d.breakfast||"",d.cokeSize||"",d.walk1||"",d.walk2||"",d.daughterWalk||"",d.shadowbox||"",d.moodMental||"",d.moodBody||"",d.moodEnergy||"",'"'+(d.moodText||"").replace(/"/g,'""')+'"',ws,w.room1Name||"",w.room1Level||"",w.room2Name||"",w.room2Level||"",w.therapy||"",w.friendCheck||"",w.friendName||"",w.friendMethod||"",'"'+(w.intention||"").replace(/"/g,'""')+'"',w.reviewed||""].join(","));
+  });
+  // Append revka insights as JSON block
+  if(revkaInsights.length){
+    rows.push("");rows.push("---REVKA_INSIGHTS_JSON---");
+    rows.push(JSON.stringify(revkaInsights));
+  }
+  const blob=new Blob([rows.join("\n")],{type:"text/csv"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download="daily-mirror-"+mirrorDate()+".csv";a.click();URL.revokeObjectURL(a.href);
+}
+
+function importCSV(file){
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const raw=e.target.result;
+      // Check for revka insights block
+      let csvPart=raw,insightsPart=null;
+      const splitIdx=raw.indexOf("---REVKA_INSIGHTS_JSON---");
+      if(splitIdx!==-1){
+        csvPart=raw.substring(0,splitIdx);
+        const jsonLine=raw.substring(splitIdx).split("\n")[1];
+        if(jsonLine)try{insightsPart=JSON.parse(jsonLine)}catch{}
+      }
+      const lines=csvPart.split("\n"),hdr=lines[0].split(",");
+      const nd={},nw={};
+      for(let i=1;i<lines.length;i++){
+        if(!lines[i].trim())continue;
+        const vals=lines[i].match(/(".*?"|[^,]*)/g).map(v=>v.replace(/^"|"$/g,"").replace(/""/g,'"'));
+        const o={};hdr.forEach((h,j)=>o[h.trim()]=vals[j]||"");
+        const ds=o.date;if(!ds)continue;
+        nd[ds]={};
+        if(o.offDay==="true")nd[ds].offDay=true;
+        if(o.sleepScore)nd[ds].sleepScore=o.sleepScore;
+        if(o.sleepUsage)nd[ds].sleepUsage=o.sleepUsage;
+        if(o.sleepEvents)nd[ds].sleepEvents=o.sleepEvents;
+        if(o.breakfast)nd[ds].breakfast=o.breakfast;
+        if(o.cokeSize)nd[ds].cokeSize=o.cokeSize;
+        if(o.walk1==="true")nd[ds].walk1=true;
+        if(o.walk2==="true")nd[ds].walk2=true;
+        if(o.daughterWalk==="true")nd[ds].daughterWalk=true;
+        if(o.shadowbox==="true")nd[ds].shadowbox=true;
+        if(o.moodMental)nd[ds].moodMental=parseInt(o.moodMental);
+        if(o.moodBody)nd[ds].moodBody=parseInt(o.moodBody);
+        if(o.moodEnergy)nd[ds].moodEnergy=parseInt(o.moodEnergy);
+        if(o.moodText)nd[ds].moodText=o.moodText;
+        const ws=o.weekStart;
+        if(ws&&!nw[ws]){
+          nw[ws]={};
+          if(o.room1Name)nw[ws].room1Name=o.room1Name;
+          if(o.room1Level)nw[ws].room1Level=o.room1Level;
+          if(o.room2Name)nw[ws].room2Name=o.room2Name;
+          if(o.room2Level)nw[ws].room2Level=o.room2Level;
+          if(o.therapy==="true")nw[ws].therapy=true;
+          if(o.friendCheck==="true")nw[ws].friendCheck=true;
+          if(o.friendName)nw[ws].friendName=o.friendName;
+          if(o.friendMethod)nw[ws].friendMethod=o.friendMethod;
+          if(o.weekIntention)nw[ws].intention=o.weekIntention;
+          if(o.weekReviewed==="true")nw[ws].reviewed=true;
+        }
+      }
+      DD=nd;WD=nw;saveDD();saveWD();
+      if(insightsPart){revkaInsights=insightsPart;saveInsights(revkaInsights)}
+      render();alert("Data imported successfully!");
+    }catch(err){alert("Import failed: "+err.message)}
+  };reader.readAsText(file);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════════════
+setIcon();
+render();
+</script>
+</body>
+</html>
